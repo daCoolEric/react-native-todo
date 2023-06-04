@@ -1,0 +1,233 @@
+import { StatusBar } from "expo-status-bar";
+import { useState, useReducer } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  SafeAreaView,
+} from "react-native";
+// import DigitButton from "./DigitButton";
+
+const intialState = {};
+
+export const ACTIONS = {
+  ADD_DIGIT: "add-digit",
+  CHOOSE_OPERATION: "choose-operation",
+  CLEAR: "clear",
+  DELETE_DIGIT: "delete-digit",
+  EVALUATE: "evaluate",
+};
+
+function reducer(state, { type, payload }) {
+  switch (type) {
+    case ACTIONS.ADD_DIGIT:
+      if (state.overwrite) {
+        return {
+          ...state,
+          currentOperand: payload.digit,
+          overwrite: false,
+        };
+      }
+      if (payload.digit === "0" && state.currentOperand === "0") {
+        return state;
+      }
+      if (payload.digit === "." && state.currentOperand.includes(".")) {
+        return state;
+      }
+
+      return {
+        ...state,
+        currentOperand: `${state.currentOperand || ""}${payload.digit}`,
+      };
+    case ACTIONS.CHOOSE_OPERATION:
+      if (state.currentOperand == null && state.previousOperand == null) {
+        return state;
+      }
+
+      if (state.currentOperand == null) {
+        return {
+          ...state,
+          operation: payload.operation,
+        };
+      }
+
+      if (state.previousOperand == null) {
+        return {
+          ...state,
+          operation: payload.operation,
+          previousOperand: state.currentOperand,
+          currentOperand: null,
+        };
+      }
+
+      return {
+        ...state,
+        previousOperand: evaluate(state),
+        operation: payload.operation,
+        currentOperand: null,
+      };
+    case ACTIONS.CLEAR:
+      return {};
+    case ACTIONS.DELETE_DIGIT:
+      if (state.overwrite) {
+        return {
+          ...state,
+          overwrite: false,
+          currentOperand: null,
+        };
+      }
+      if (state.currentOperand == null) return state;
+      if (state.currentOperand.length === 1) {
+        return { ...state, currentOperand: null };
+      }
+
+      return {
+        ...state,
+        currentOperand: state.currentOperand.slice(0, -1),
+      };
+    case ACTIONS.EVALUATE:
+      if (
+        state.operation == null ||
+        state.currentOperand == null ||
+        state.previousOperand == null
+      ) {
+        return state;
+      }
+
+      return {
+        ...state,
+        overwrite: true,
+        previousOperand: null,
+        operation: null,
+        currentOperand: evaluate(state),
+      };
+  }
+}
+
+export default function App() {
+  const [{ currentOperand, previousOperand, operation }, dispatch] = useReducer(
+    reducer,
+    { currentOperand: 0 }
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.viewScreen}>
+        <View style={styles.inputScreen}>
+          <Text style={{ fontSize: 90, color: "white" }}>
+            {previousOperand}
+            {operation}
+          </Text>
+        </View>
+        <View style={styles.resultScreen}>
+          <Text style={{ fontSize: 90, color: "white" }}>{currentOperand}</Text>
+        </View>
+      </View>
+
+      <View style={styles.keyContainer}>
+        <View style={styles.row}>
+          <DigitButton digit="AC" dispatch={dispatch} />
+          <DigitButton digit="()" dispatch={dispatch} />
+          <DigitButton digit="%" dispatch={dispatch} />
+          <DigitButton digit="CE" dispatch={dispatch} />
+        </View>
+        <View style={styles.row}>
+          <DigitButton digit="7" dispatch={dispatch} />
+          <DigitButton digit="8" dispatch={dispatch} />
+          <DigitButton digit="9" dispatch={dispatch} />
+          <DigitButton digit="x" dispatch={dispatch} />
+        </View>
+        <View style={styles.row}>
+          <DigitButton digit="4" dispatch={dispatch} />
+          <DigitButton digit="5" dispatch={dispatch} />
+          <DigitButton digit="6" dispatch={dispatch} />
+          <DigitButton digit="-" dispatch={dispatch} />
+        </View>
+        <View style={styles.row}>
+          <DigitButton digit="1" dispatch={dispatch} />
+          <DigitButton digit="2" dispatch={dispatch} />
+          <DigitButton digit="3" dispatch={dispatch} />
+          <DigitButton digit="+" dispatch={dispatch} />
+        </View>
+        <View style={styles.row}>
+          <DigitButton digit="0" dispatch={dispatch} />
+          <DigitButton digit="." dispatch={dispatch} />
+          <DigitButton digit="÷" dispatch={dispatch} />
+          <DigitButton digit="=" dispatch={dispatch} />
+        </View>
+        <StatusBar style="auto" />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const DigitButton = ({ dispatch, digit }) => (
+  <TouchableOpacity
+    onPress={() => dispatch({ type: ACTIONS.ADD_DIGIT, payload: { digit } })}
+  >
+    <View style={styles.Box}>
+      <View style={styles.TextContainer}>
+        <Text style={{ fontSize: 25, color: "white" }}>{digit}</Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewScreen: {
+    flex: 1,
+    backgroundColor: "green",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "95%",
+    borderRadius: 15,
+  },
+  inputScreen: {
+    flex: 1,
+    // backgroundColor: "red",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    borderRadius: 15,
+  },
+  resultScreen: {
+    flex: 1.5,
+    // backgroundColor: "blue",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    paddingRight: 5,
+    width: "100%",
+    borderRadius: 15,
+  },
+  keyContainer: {
+    flex: 1.6,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    // borderColor: "#523009",
+    // borderStyle: "solid",
+    // borderWidth: 2,
+  },
+  Box: {
+    width: 90,
+    height: 90,
+    backgroundColor: "gray",
+    margin: 5,
+    borderRadius: 15,
+  },
+  TextContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  row: {
+    flexDirection: "row",
+  },
+});
