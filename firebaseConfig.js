@@ -6,7 +6,7 @@ import "firebase/firestore";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAJOAnZOnz87YjuNlWkKBptZ3Lq2wTViU4",
+  apiKey: process.env.API_KEY,
   authDomain: "todo-f5c27.firebaseapp.com",
   databaseURL: "https://todo-f5c27-default-rtdb.firebaseio.com",
   projectId: "todo-f5c27",
